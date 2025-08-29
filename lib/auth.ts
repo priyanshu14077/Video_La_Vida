@@ -1,15 +1,17 @@
 import { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github"
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { connectToDatabase } from "./db";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "./db";
 import bcrypt from "bcryptjs";
-import User from "@/models/user";
 
 export const authOptions: NextAuthOptions  = {
+    adapter: PrismaAdapter(prisma),
     providers: [
         GithubProvider({
             clientId: process.env.GITHUB_CLIENT_ID!,
             clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+            allowDangerousEmailAccountLinking: true,
         }),
 
         CredentialsProvider({ 
@@ -24,14 +26,14 @@ export const authOptions: NextAuthOptions  = {
                 }
 
                 try {
-                    await connectToDatabase();
-                    const user = await User.findOne({
-                        email: credentials.email,
+                    const user = await prisma.user.findUnique({
+                        where: { email: credentials.email },
                     });
 
-                    if (!user) {
+                    if (!user || !user.password) {
                         throw new Error("No user found with this email");
                     }
+                    
                     const isValid = await bcrypt.compare(
                         credentials.password,
                         user.password
@@ -42,8 +44,9 @@ export const authOptions: NextAuthOptions  = {
                         }
 
                         return {
-                            id : user._id.toString(),
+                            id : user.id.toString(),
                             email: user.email,
+                            name: user.name,
                         }
                     }  catch (error) {
                         console.error("Error during authorization:", error);
@@ -58,17 +61,25 @@ export const authOptions: NextAuthOptions  = {
        
     ],
     callbacks: {
-        async jwt({token , user }) {
+        async signIn({ user, account, profile }) {
+            if (account?.provider === "github") {
+                return true;
+            }
+            return true;
+        },
+        async jwt({token , user, account }) {
             if (user){
                 token.id = user.id;
                 token.email = user.email;
+                token.name = user.name;
             }
             return token;
         },
-        async session({ session, token , user }) {
-            if (session.user) {
-                session.user.id =token.id as string 
-                
+        async session({ session, token }) {
+            if (session.user && token) {
+                session.user.id = token.id as string;
+                session.user.email = token.email as string;
+                session.user.name = token.name as string;
             }
             return session;
         },
@@ -77,6 +88,7 @@ export const authOptions: NextAuthOptions  = {
         signIn: "/login",
         error: "/login",
     },
+    debug: process.env.NODE_ENV === "development",
     session: {
         strategy: "jwt",
         maxAge: 30 * 24 * 60 * 60, 
