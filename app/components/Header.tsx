@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Home, User } from "lucide-react";
+import { Home, User, Moon, Sun } from "lucide-react";
 import { useNotification } from "./Notification";
+
 
 export default function Header() {
   const { data: session } = useSession();
   const { showNotification } = useNotification();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSignOut = async () => {
     try {
@@ -19,7 +21,7 @@ export default function Header() {
   };
 
   return (
-    <div className="navbar bg-base-300 sticky top-0 z-40">
+    <div className="navbar bg-base-300 sticky top-0 z-40 backdrop-blur-md bg-opacity-80">
       <div className="container mx-auto">
         <div className="flex-1 px-2 lg:flex-none">
           <Link
@@ -35,7 +37,14 @@ export default function Header() {
           </Link>
         </div>
         <div className="flex flex-1 justify-end px-2">
-          <div className="flex items-stretch gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              aria-label="Toggle night mode"
+              onClick={toggleTheme}
+              className="btn btn-ghost btn-circle"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <div className="dropdown dropdown-end">
               <div
                 tabIndex={0}
@@ -98,4 +107,8 @@ export default function Header() {
       </div>
     </div>
   );
+}
+
+function useTheme(): { theme: any; toggleTheme: any; } {
+  throw new Error("Function not implemented.");
 }

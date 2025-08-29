@@ -1,4 +1,4 @@
- "use client" // This component must be a client component
+"use client" // This component must be a client component
 
 import {
     ImageKitAbortError,
@@ -71,19 +71,24 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     }
 }  
     return (
-        <>
-            
-            <input 
-            type="file"
-            accept = { fileType === "video" ? "video/*" : "image/*" }
-            onChange={handleFileChange}  />
-
+        <div className="w-full max-w-md mx-auto rounded-2xl bg-white/10 dark:bg-black/30 shadow-lg backdrop-blur-md p-8 flex flex-col items-center gap-4">
+            <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer py-8 hover:bg-white/20 dark:hover:bg-black/40 transition">
+                <span className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">Upload a {fileType || "file"}</span>
+                <input 
+                    type="file"
+                    accept={fileType === "video" ? "video/*" : "image/*"}
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">Max size: 100MB</span>
+            </label>
             {uploading && (
-                <span>Loading...</span>
-
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div className="bg-blue-500 h-2 animate-pulse w-full" style={{ width: '100%' }} />
+                </div>
             )}
-            
-        </>
+            {error && <span className="text-red-500 text-sm">{error}</span>}
+        </div>
     );
 };
 
