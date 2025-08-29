@@ -1,6 +1,6 @@
-import { IVideo } from "@/models/video";
+import { VideoType } from "@/types/video";
 
-export type VideoFormData = Omit<IVideo, "_id">;
+export type VideoFormData = Omit<VideoType, "id">;
 
 type FetchOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
